@@ -26,7 +26,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   size: ProductSize;
-  image: string; // Primary image for cart display
+  image: ImageSourcePropType; // Primary image for cart display
   category: ProductCategory;
 }
 

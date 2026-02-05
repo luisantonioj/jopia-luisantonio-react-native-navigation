@@ -46,7 +46,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         price: product.price,
         quantity: 1,
         size: size,
-        image: product.images[0].uri, // Use first image as primary
+        image: product.images[0].source, // Use first image as primary
         category: product.category,
       };
       

@@ -61,7 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
           onPress={() => onPress(product)}
         >
           <Text style={[styles.addButtonText, { color: colors.buttonText }]}>
-            Select Size
+            Add to Cart
           </Text>
         </Pressable>
       </View>
