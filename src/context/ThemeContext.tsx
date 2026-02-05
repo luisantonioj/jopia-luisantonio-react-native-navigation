@@ -29,9 +29,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const colors = {
     light: {
       background: '#FFFFFF',
-      text: '#000000',
+      text: '#1D1D1B',
       cardBackground: '#F5F5F5',
-      buttonBackground: '#007AFF',
+      buttonBackground: '#007A33',
       buttonText: '#FFFFFF',
       border: '#E0E0E0',
     },
@@ -39,7 +39,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       background: '#1C1C1E',
       text: '#FFFFFF',
       cardBackground: '#2C2C2E',
-      buttonBackground: '#0A84FF',
+      buttonBackground: '#007A33',
       buttonText: '#FFFFFF',
       border: '#3A3A3C',
     },
