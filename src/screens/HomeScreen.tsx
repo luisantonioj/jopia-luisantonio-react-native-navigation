@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCart } from '../CartContext';
-import { useTheme } from '../ThemeContext';
-import { PRODUCTS } from '../data/products';
+import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
+import { PRODUCTS } from '../../data/products';
 
 type RootStackParamList = {
   Home: undefined;

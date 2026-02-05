@@ -1,4 +1,4 @@
-import { Product } from '../CartContext';
+import { Product } from '../src/context/CartContext';
 
 export const PRODUCTS: Product[] = [
   { id: '1', name: 'Wireless Headphones', price: 59.99 },

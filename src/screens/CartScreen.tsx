@@ -5,14 +5,13 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Alert,
   Platform,
   StatusBar,
 } from 'react-native';
-import { useNavigation, useFocusEffect, CommonActions } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCart } from '../CartContext';
-import { useTheme } from '../ThemeContext';
+import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
 
 type RootStackParamList = {
   Home: undefined;
@@ -20,14 +19,14 @@ type RootStackParamList = {
   Checkout: undefined;
 };
 
-type CheckoutScreenNavigationProp = NativeStackNavigationProp<
+type CartScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'Checkout'
+  'Cart'
 >;
 
-export default function CheckoutScreen() {
-  const navigation = useNavigation<CheckoutScreenNavigationProp>();
-  const { cart, getTotalPrice, clearCart } = useCart();
+export default function CartScreen() {
+  const navigation = useNavigation<CartScreenNavigationProp>();
+  const { cart, increaseQuantity, decreaseQuantity, getTotalPrice } = useCart();
   const { colors, theme } = useTheme();
 
   // Handle Android status bar when screen is focused
@@ -40,41 +39,49 @@ export default function CheckoutScreen() {
     }, [theme, colors.background])
   );
 
-  const handleCheckout = () => {
-    Alert.alert(
-      'Checkout Successful',
-      'Your order has been placed successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            clearCart();
-            // Use reset to clear navigation stack and prevent back button issues
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              })
-            );
-          },
-        },
-      ]
-    );
-  };
-
-  const renderOrderItem = ({ item }: { item: typeof cart[0] }) => (
-    <View style={[styles.orderItem, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+  const renderCartItem = ({ item }: { item: typeof cart[0] }) => (
+    <View style={[styles.cartItem, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={styles.itemInfo}>
         <Text style={[styles.itemName, { color: colors.text }]}>
           {item.name}
         </Text>
-        <Text style={[styles.itemDetails, { color: colors.text }]}>
+        <Text style={[styles.itemPrice, { color: colors.text }]}>
           ${item.price.toFixed(2)} × {item.quantity}
         </Text>
+        <Text style={[styles.itemTotal, { color: colors.text }]}>
+          Subtotal: ${(item.price * item.quantity).toFixed(2)}
+        </Text>
       </View>
-      <Text style={[styles.itemTotal, { color: colors.text }]}>
-        ${(item.price * item.quantity).toFixed(2)}
-      </Text>
+
+      <View style={styles.quantityContainer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.quantityButton,
+            { backgroundColor: colors.buttonBackground },
+            pressed && styles.pressed,
+          ]}
+          onPress={() => decreaseQuantity(item.id)}
+        >
+          <Text style={[styles.quantityButtonText, { color: colors.buttonText }]}>
+            -
+          </Text>
+        </Pressable>
+        <Text style={[styles.quantityText, { color: colors.text }]}>
+          {item.quantity}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.quantityButton,
+            { backgroundColor: colors.buttonBackground },
+            pressed && styles.pressed,
+          ]}
+          onPress={() => increaseQuantity(item.id)}
+        >
+          <Text style={[styles.quantityButtonText, { color: colors.buttonText }]}>
+            +
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 
@@ -91,7 +98,7 @@ export default function CheckoutScreen() {
         
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: colors.text }]}>
-            No items to checkout
+            Your cart is empty
           </Text>
           <Pressable
             style={({ pressed }) => [
@@ -99,12 +106,7 @@ export default function CheckoutScreen() {
               { backgroundColor: colors.buttonBackground },
               pressed && styles.pressed,
             ]}
-            onPress={() => navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              })
-            )}
+            onPress={() => navigation.goBack()}
           >
             <Text style={[styles.buttonText, { color: colors.buttonText }]}>
               Go Shopping
@@ -138,16 +140,14 @@ export default function CheckoutScreen() {
             ← Back
           </Text>
         </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>Checkout</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Shopping Cart</Text>
       </View>
 
-      {/* Order Summary */}
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Order Summary</Text>
-      
+      {/* Cart Items */}
       <FlatList
         data={cart}
         keyExtractor={(item) => item.id}
-        renderItem={renderOrderItem}
+        renderItem={renderCartItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
@@ -157,22 +157,19 @@ export default function CheckoutScreen() {
 
       {/* Total and Checkout Button */}
       <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.cardBackground }]}>
-        <View style={styles.totalRow}>
-          <Text style={[styles.totalLabel, { color: colors.text }]}>Total Amount:</Text>
-          <Text style={[styles.totalAmount, { color: colors.text }]}>
-            ${getTotalPrice().toFixed(2)}
-          </Text>
-        </View>
+        <Text style={[styles.totalText, { color: colors.text }]}>
+          Total: ${getTotalPrice().toFixed(2)}
+        </Text>
         <Pressable
           style={({ pressed }) => [
             styles.checkoutButton,
             { backgroundColor: colors.buttonBackground },
             pressed && styles.pressed,
           ]}
-          onPress={handleCheckout}
+          onPress={() => navigation.navigate('Checkout')}
         >
           <Text style={[styles.checkoutButtonText, { color: colors.buttonText }]}>
-            Checkout
+            Proceed to Checkout
           </Text>
         </Pressable>
       </View>
@@ -202,12 +199,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -233,7 +224,7 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
-  orderItem: {
+  cartItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -250,30 +241,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
-  itemDetails: {
+  itemPrice: {
     fontSize: 14,
+    marginBottom: 4,
   },
   itemTotal: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  quantityButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quantityButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: '600',
+    minWidth: 30,
+    textAlign: 'center',
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
   },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  totalLabel: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  totalAmount: {
+  totalText: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 16,
   },
   checkoutButton: {
     paddingVertical: 16,

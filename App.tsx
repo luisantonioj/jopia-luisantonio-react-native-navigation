@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { CartProvider } from './CartContext';
-import { ThemeProvider } from './ThemeContext';
-import HomeScreen from './screens/HomeScreen';
-import CartScreen from './screens/CartScreen';
-import CheckoutScreen from './screens/CheckoutScreen';
+import { CartProvider } from './src/context/CartContext';
+import { ThemeProvider } from './src/context/ThemeContext';
+import HomeScreen from './src/screens/HomeScreen';
+import CartScreen from './src/screens/CartScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen';
 
 type RootStackParamList = {
   Home: undefined;
