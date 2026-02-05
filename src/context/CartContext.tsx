@@ -5,7 +5,7 @@ import { CartItem, Product, ProductSize } from '../types';
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, size: ProductSize) => void;
+  addToCart: (product: Product, size: ProductSize, quantity?: number) => void;
   removeFromCart: (cartItemId: string) => void;
   increaseQuantity: (cartItemId: string) => void;
   decreaseQuantity: (cartItemId: string) => void;
@@ -21,7 +21,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const addToCart = (product: Product, size: ProductSize) => {
+  const addToCart = (product: Product, size: ProductSize, quantity: number = 1) => {
     setCart((prevCart) => {
       // Create unique ID combining product ID and size
       const cartItemId = `${product.id}-${size}`;
@@ -33,7 +33,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         // Increase quantity if exists
         return prevCart.map((item) =>
           item.id === cartItemId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
@@ -44,7 +44,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         productId: product.id,
         name: product.name,
         price: product.price,
-        quantity: 1,
+        quantity: quantity,
         size: size,
         image: product.images[0].source, // Use first image as primary
         category: product.category,

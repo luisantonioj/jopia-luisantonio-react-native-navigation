@@ -47,13 +47,13 @@ export default function HomeScreen() {
     setSizeModalVisible(true);
   };
 
-  const handleSizeSelect = (size: ProductSize) => {
+  const handleSizeSelect = (size: ProductSize, quantity: number) => {
     if (selectedProduct) {
-      addToCart(selectedProduct, size);
+      addToCart(selectedProduct, size, quantity);
       setSizeModalVisible(false);
       Alert.alert(
         'Added to Cart',
-        `${selectedProduct.name} (Size: ${size}) has been added to your cart!`,
+        `${quantity} × ${selectedProduct.name} (Size: ${size}) ${quantity === 1 ? 'has' : 'have'} been added to your cart!`,
         [{ text: 'OK' }]
       );
     }

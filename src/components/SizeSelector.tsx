@@ -17,7 +17,7 @@ interface SizeSelectorProps {
   visible: boolean;
   product: Product | null;
   onClose: () => void;
-  onSelectSize: (size: ProductSize) => void;
+  onSelectSize: (size: ProductSize, quantity: number) => void;
 }
 
 export const SizeSelector: React.FC<SizeSelectorProps> = ({
@@ -28,19 +28,34 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
 }) => {
   const { colors } = useTheme();
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   if (!product) return null;
 
   const handleConfirm = () => {
-    if (selectedSize) {
-      onSelectSize(selectedSize);
+    if (selectedSize && quantity > 0) {
+      // Pass quantity directly to addToCart
+      onSelectSize(selectedSize, quantity);
+      // Reset states
       setSelectedSize(null);
+      setQuantity(1);
     }
   };
 
   const handleClose = () => {
     setSelectedSize(null);
+    setQuantity(1);
     onClose();
+  };
+
+  const increaseQuantity = () => {
+    setQuantity(prev => prev + 1);
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
   };
 
   return (
@@ -66,7 +81,7 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
             {/* Product Info */}
             <View style={styles.productInfo}>
               <Image 
-                source={product.images[0].source} 
+                source={product.images[0].source}
                 style={styles.productImage}
                 resizeMode="cover"
               />
@@ -120,6 +135,58 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
               </View>
             </View>
 
+            {/* Quantity Selector */}
+            <View style={styles.quantityContainer}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Quantity
+              </Text>
+              <View style={styles.quantityControls}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quantityButton,
+                    { 
+                      backgroundColor: quantity > 1 ? colors.buttonBackground : colors.border,
+                      borderColor: colors.border,
+                    },
+                    pressed && quantity > 1 && styles.buttonPressed,
+                  ]}
+                  onPress={decreaseQuantity}
+                  disabled={quantity <= 1}
+                >
+                  <Text 
+                    style={[
+                      styles.quantityButtonText, 
+                      { color: quantity > 1 ? colors.buttonText : colors.text }
+                    ]}
+                  >
+                    -
+                  </Text>
+                </Pressable>
+                
+                <View style={[styles.quantityDisplay, { backgroundColor: colors.cardBackground }]}>
+                  <Text style={[styles.quantityText, { color: colors.text }]}>
+                    {quantity}
+                  </Text>
+                </View>
+                
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quantityButton,
+                    { 
+                      backgroundColor: colors.buttonBackground,
+                      borderColor: colors.border,
+                    },
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={increaseQuantity}
+                >
+                  <Text style={[styles.quantityButtonText, { color: colors.buttonText }]}>
+                    +
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
             {/* Product Description */}
             {product.description && (
               <View style={styles.descriptionContainer}>
@@ -154,7 +221,9 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
                   { color: selectedSize ? colors.buttonText : colors.text },
                 ]}
               >
-                {selectedSize ? 'Add to Cart' : 'Select a size'}
+                {selectedSize 
+                  ? `Add ${quantity} ${quantity === 1 ? 'item' : 'items'} to Cart` 
+                  : 'Select a size'}
               </Text>
             </Pressable>
           </View>
@@ -247,6 +316,39 @@ const styles = StyleSheet.create({
   sizeText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  quantityContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  quantityButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quantityButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  quantityDisplay: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   descriptionContainer: {
     paddingHorizontal: 20,
