@@ -1,4 +1,6 @@
-import React from 'react';
+// src/screens/HomeScreen.tsx
+
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,13 +15,9 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { PRODUCTS } from '../../data/products';
-
-type RootStackParamList = {
-  Home: undefined;
-  Cart: undefined;
-  Checkout: undefined;
-};
+import { PRODUCTS } from '../data/products';
+import { ProductCard, SizeSelector } from '../components';
+import { Product, ProductSize, RootStackParamList } from '../types';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,8 +26,11 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { addToCart, cart } = useCart();
+  const { addToCart, getCartItemCount } = useCart();
   const { colors, theme, toggleTheme } = useTheme();
+  
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [sizeModalVisible, setSizeModalVisible] = useState(false);
 
   // Handle Android status bar when screen is focused
   useFocusEffect(
@@ -41,34 +42,25 @@ export default function HomeScreen() {
     }, [theme, colors.background])
   );
 
-  const handleAddToCart = (product: typeof PRODUCTS[0]) => {
-    addToCart(product);
-    Alert.alert('Success', `${product.name} added to cart!`);
+  const handleProductPress = (product: Product) => {
+    setSelectedProduct(product);
+    setSizeModalVisible(true);
   };
 
-  const renderProduct = ({ item }: { item: typeof PRODUCTS[0] }) => (
-    <View style={[styles.productCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-      <View style={styles.productInfo}>
-        <Text style={[styles.productName, { color: colors.text }]}>
-          {item.name}
-        </Text>
-        <Text style={[styles.productPrice, { color: colors.text }]}>
-          ${item.price.toFixed(2)}
-        </Text>
-      </View>
-      <Pressable
-        style={({ pressed }) => [
-          styles.addButton,
-          { backgroundColor: colors.buttonBackground },
-          pressed && styles.pressed,
-        ]}
-        onPress={() => handleAddToCart(item)}
-      >
-        <Text style={[styles.addButtonText, { color: colors.buttonText }]}>
-          Add to Cart
-        </Text>
-      </Pressable>
-    </View>
+  const handleSizeSelect = (size: ProductSize) => {
+    if (selectedProduct) {
+      addToCart(selectedProduct, size);
+      setSizeModalVisible(false);
+      Alert.alert(
+        'Added to Cart',
+        `${selectedProduct.name} (Size: ${size}) has been added to your cart!`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const renderProduct = ({ item }: { item: Product }) => (
+    <ProductCard product={item} onPress={handleProductPress} />
   );
 
   return (
@@ -83,7 +75,12 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Products</Text>
+        <View>
+          <Text style={[styles.title, { color: colors.text }]}>DLSU Merch</Text>
+          <Text style={[styles.subtitle, { color: colors.text, opacity: 0.6 }]}>
+            Official Green Archers Merchandise
+          </Text>
+        </View>
         <View style={styles.headerButtons}>
           <Pressable
             style={({ pressed }) => [
@@ -93,7 +90,7 @@ export default function HomeScreen() {
             ]}
             onPress={toggleTheme}
           >
-            <Text style={{ color: colors.text }}>
+            <Text style={{ fontSize: 20 }}>
               {theme === 'light' ? '🌙' : '☀️'}
             </Text>
           </Pressable>
@@ -106,7 +103,7 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('Cart')}
           >
             <Text style={[styles.cartButtonText, { color: colors.buttonText }]}>
-              Go to Cart ({cart.length})
+              🛒 {getCartItemCount()}
             </Text>
           </Pressable>
         </View>
@@ -119,9 +116,17 @@ export default function HomeScreen() {
         renderItem={renderProduct}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        initialNumToRender={8}
-        maxToRenderPerBatch={8}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
         windowSize={5}
+      />
+
+      {/* Size Selection Modal */}
+      <SizeSelector
+        visible={sizeModalVisible}
+        product={selectedProduct}
+        onClose={() => setSizeModalVisible(false)}
+        onSelectSize={handleSizeSelect}
       />
     </View>
   );
@@ -136,11 +141,15 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: 12,
+    marginTop: 2,
   },
   headerButtons: {
     flexDirection: 'row',
@@ -158,40 +167,12 @@ const styles = StyleSheet.create({
   },
   cartButtonText: {
     fontWeight: '600',
+    fontSize: 14,
   },
   pressed: {
     opacity: 0.7,
   },
   listContainer: {
     padding: 16,
-  },
-  productCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  productInfo: {
-    flex: 1,
-  },
-  productName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  productPrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-  },
-  addButtonText: {
-    fontWeight: '600',
   },
 });

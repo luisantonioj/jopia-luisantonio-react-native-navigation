@@ -1,3 +1,5 @@
+// src/screens/CheckoutScreen.tsx
+
 import React from 'react';
 import {
   View,
