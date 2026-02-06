@@ -9,9 +9,15 @@ interface CartContextType {
   removeFromCart: (cartItemId: string) => void;
   increaseQuantity: (cartItemId: string) => void;
   decreaseQuantity: (cartItemId: string) => void;
+  toggleItemSelection: (cartItemId: string) => void;
+  selectAllItems: () => void;
+  deselectAllItems: () => void;
   clearCart: () => void;
+  clearSelectedItems: () => void;
   getTotalPrice: () => number;
+  getSelectedTotalPrice: () => number;
   getCartItemCount: () => number;
+  getSelectedItemCount: () => number;
 }
 
 // Create context
@@ -48,6 +54,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         size: size,
         image: product.images[0].source, // Use first image as primary
         category: product.category,
+        isSelected: true, // Auto-select new items
       };
       
       return [...prevCart, newCartItem];
@@ -83,16 +90,52 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const toggleItemSelection = (cartItemId: string) => {
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === cartItemId ? { ...item, isSelected: !item.isSelected } : item
+      )
+    );
+  };
+
+  const selectAllItems = () => {
+    setCart((prevCart) =>
+      prevCart.map((item) => ({ ...item, isSelected: true }))
+    );
+  };
+
+  const deselectAllItems = () => {
+    setCart((prevCart) =>
+      prevCart.map((item) => ({ ...item, isSelected: false }))
+    );
+  };
+
   const clearCart = () => {
     setCart([]);
+  };
+
+  const clearSelectedItems = () => {
+    setCart((prevCart) => prevCart.filter((item) => !item.isSelected));
   };
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
+  const getSelectedTotalPrice = () => {
+    return cart
+      .filter((item) => item.isSelected)
+      .reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
   const getCartItemCount = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const getSelectedItemCount = () => {
+    return cart
+      .filter((item) => item.isSelected)
+      .reduce((total, item) => total + item.quantity, 0);
   };
 
   return (
@@ -103,9 +146,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
+        toggleItemSelection,
+        selectAllItems,
+        deselectAllItems,
         clearCart,
+        clearSelectedItems,
         getTotalPrice,
+        getSelectedTotalPrice,
         getCartItemCount,
+        getSelectedItemCount,
       }}
     >
       {children}

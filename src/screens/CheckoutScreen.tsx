@@ -10,17 +10,13 @@ import {
   Alert,
   Platform,
   StatusBar,
+  Image,
 } from 'react-native';
 import { useNavigation, useFocusEffect, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-
-type RootStackParamList = {
-  Home: undefined;
-  Cart: undefined;
-  Checkout: undefined;
-};
+import { RootStackParamList, CartItem } from '../types';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -29,8 +25,11 @@ type CheckoutScreenNavigationProp = NativeStackNavigationProp<
 
 export default function CheckoutScreen() {
   const navigation = useNavigation<CheckoutScreenNavigationProp>();
-  const { cart, getTotalPrice, clearCart } = useCart();
+  const { cart, getSelectedTotalPrice, clearSelectedItems } = useCart();
   const { colors, theme } = useTheme();
+
+  // Filter to only show selected items
+  const selectedItems = cart.filter(item => item.isSelected);
 
   // Handle Android status bar when screen is focused
   useFocusEffect(
@@ -43,44 +42,63 @@ export default function CheckoutScreen() {
   );
 
   const handleCheckout = () => {
+    const unselectedCount = cart.filter(item => !item.isSelected).length;
+    const checkoutMessage = unselectedCount > 0
+      ? `Your order has been placed successfully!\n\nYou have ${unselectedCount} ${unselectedCount === 1 ? 'item' : 'items'} remaining in your cart.`
+      : 'Your order has been placed successfully!\n\nThank you for supporting DLSU Green Archers!';
+
     Alert.alert(
-      'Checkout Successful',
-      'Your order has been placed successfully!',
+      'Checkout Successful! 🎉',
+      checkoutMessage,
       [
         {
           text: 'OK',
           onPress: () => {
-            clearCart();
-            // Use reset to clear navigation stack and prevent back button issues
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              })
-            );
+            clearSelectedItems(); // Only remove selected items
+            // Navigate to appropriate screen
+            if (unselectedCount > 0) {
+              // If items remain, go back to cart
+              navigation.goBack();
+            } else {
+              // If cart is empty, reset to home
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'Home' }],
+                })
+              );
+            }
           },
         },
       ]
     );
   };
 
-  const renderOrderItem = ({ item }: { item: typeof cart[0] }) => (
+  const renderOrderItem = ({ item }: { item: CartItem }) => (
     <View style={[styles.orderItem, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+      <Image
+        source={item.image}
+        style={styles.itemImage}
+        resizeMode="cover"
+      />
       <View style={styles.itemInfo}>
-        <Text style={[styles.itemName, { color: colors.text }]}>
+        <Text style={[styles.itemName, { color: colors.text }]} numberOfLines={2}>
           {item.name}
         </Text>
+        <Text style={[styles.itemSize, { color: colors.text, opacity: 0.6 }]}>
+          Size: {item.size}
+        </Text>
         <Text style={[styles.itemDetails, { color: colors.text }]}>
-          ${item.price.toFixed(2)} × {item.quantity}
+          ₱{item.price.toFixed(2)} × {item.quantity}
         </Text>
       </View>
       <Text style={[styles.itemTotal, { color: colors.text }]}>
-        ${(item.price * item.quantity).toFixed(2)}
+        ₱{(item.price * item.quantity).toFixed(2)}
       </Text>
     </View>
   );
 
-  if (cart.length === 0) {
+  if (selectedItems.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Android Status Bar */}
@@ -90,10 +108,14 @@ export default function CheckoutScreen() {
             backgroundColor={colors.background}
           />
         )}
-        
+
         <View style={styles.emptyContainer}>
+          <Text style={{ fontSize: 64, marginBottom: 16 }}>📦</Text>
           <Text style={[styles.emptyText, { color: colors.text }]}>
             No items to checkout
+          </Text>
+          <Text style={[styles.emptySubtext, { color: colors.text, opacity: 0.6 }]}>
+            Add items to your cart first
           </Text>
           <Pressable
             style={({ pressed }) => [
@@ -109,7 +131,7 @@ export default function CheckoutScreen() {
             )}
           >
             <Text style={[styles.buttonText, { color: colors.buttonText }]}>
-              Go Shopping
+              Start Shopping
             </Text>
           </Pressable>
         </View>
@@ -144,10 +166,17 @@ export default function CheckoutScreen() {
       </View>
 
       {/* Order Summary */}
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Order Summary</Text>
-      
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Order Summary
+        </Text>
+        <Text style={[styles.itemCount, { color: colors.text, opacity: 0.6 }]}>
+          {selectedItems.length} {selectedItems.length === 1 ? 'item' : 'items'}
+        </Text>
+      </View>
+
       <FlatList
-        data={cart}
+        data={selectedItems}
         keyExtractor={(item) => item.id}
         renderItem={renderOrderItem}
         contentContainerStyle={styles.listContainer}
@@ -160,9 +189,11 @@ export default function CheckoutScreen() {
       {/* Total and Checkout Button */}
       <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.cardBackground }]}>
         <View style={styles.totalRow}>
-          <Text style={[styles.totalLabel, { color: colors.text }]}>Total Amount:</Text>
+          <Text style={[styles.totalLabel, { color: colors.text }]}>
+            Total Amount:
+          </Text>
           <Text style={[styles.totalAmount, { color: colors.text }]}>
-            ${getTotalPrice().toFixed(2)}
+            ₱{getSelectedTotalPrice().toFixed(2)}
           </Text>
         </View>
         <Pressable
@@ -174,7 +205,7 @@ export default function CheckoutScreen() {
           onPress={handleCheckout}
         >
           <Text style={[styles.checkoutButtonText, { color: colors.buttonText }]}>
-            Checkout
+            Place Order
           </Text>
         </Pressable>
       </View>
@@ -204,11 +235,19 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    paddingHorizontal: 16,
-    marginBottom: 12,
+  },
+  itemCount: {
+    fontSize: 14,
   },
   emptyContainer: {
     flex: 1,
@@ -217,12 +256,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    marginBottom: 24,
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 8,
   },
   buttonText: {
@@ -237,27 +281,38 @@ const styles = StyleSheet.create({
   },
   orderItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     marginBottom: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
+  },
+  itemImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    marginRight: 12,
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
   },
+  itemSize: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
   itemDetails: {
-    fontSize: 14,
+    fontSize: 13,
   },
   itemTotal: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 8,
   },
   footer: {
     padding: 16,
@@ -270,11 +325,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   totalLabel: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
   },
   totalAmount: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
   },
   checkoutButton: {
@@ -283,7 +338,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkoutButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

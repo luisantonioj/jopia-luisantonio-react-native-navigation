@@ -1,6 +1,8 @@
 // src/types/index.ts
 
 import { ImageSourcePropType } from 'react-native';
+import { ParamListBase } from '@react-navigation/native';
+
 export type ProductCategory = 'shirt' | 'cap' | 'hoodie' | 'sweatshirt';
 export type ProductSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'One Size';
 
@@ -28,11 +30,12 @@ export interface CartItem {
   size: ProductSize;
   image: ImageSourcePropType; // Primary image for cart display
   category: ProductCategory;
+  isSelected: boolean;
 }
 
-export type RootStackParamList = {
+export interface RootStackParamList extends ParamListBase {
   Home: undefined;
   Cart: undefined;
   Checkout: undefined;
-  ProductDetail?: { productId: string };
+  ProductDetail: { productId: string };
 }
