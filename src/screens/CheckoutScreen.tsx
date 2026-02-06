@@ -230,8 +230,7 @@ export default function CheckoutScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingTop: 50,
+    flex: 1
   },
   header: {
     padding: 16,
