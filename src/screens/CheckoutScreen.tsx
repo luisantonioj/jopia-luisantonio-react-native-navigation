@@ -42,6 +42,21 @@ export default function CheckoutScreen() {
   );
 
   const handleCheckout = () => {
+    Alert.alert(
+      'Confirm Checkout',
+      `Place this order?\n\nItems: ${selectedItems.length}\nTotal: ₱${getSelectedTotalPrice().toFixed(2)}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, Place Order',
+          style: 'destructive',
+          onPress: confirmCheckout,
+        },
+      ]
+    );
+  };
+
+  const confirmCheckout = () => {
     const unselectedCount = cart.filter(item => !item.isSelected).length;
     const checkoutMessage = unselectedCount > 0
       ? `Your order has been placed successfully!\n\nYou have ${unselectedCount} ${unselectedCount === 1 ? 'item' : 'items'} remaining in your cart.`
