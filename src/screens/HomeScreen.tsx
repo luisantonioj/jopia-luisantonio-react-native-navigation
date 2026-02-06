@@ -18,6 +18,7 @@ import { useTheme } from '../context/ThemeContext';
 import { PRODUCTS } from '../data/products';
 import { ProductCard, SizeSelector } from '../components';
 import { Product, ProductSize, RootStackParamList } from '../types';
+import { Feather } from '@expo/vector-icons';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -82,6 +83,7 @@ export default function HomeScreen() {
           </Text>
         </View>
         <View style={styles.headerButtons}>
+          {/* Theme toggle */}
           <Pressable
             style={({ pressed }) => [
               styles.themeButton,
@@ -90,23 +92,60 @@ export default function HomeScreen() {
             ]}
             onPress={toggleTheme}
           >
-            <Text style={{ fontSize: 20 }}>
-              {theme === 'light' ? '🌙' : '☀️'}
-            </Text>
+            <Feather
+              name={theme === 'light' ? 'moon' : 'sun'}
+              size={20}
+              color={colors.text}
+            />
           </Pressable>
+
+          {/* Cart with count */}
           <Pressable
-            style={({ pressed }) => [
-              styles.cartButton,
-              { backgroundColor: colors.buttonBackground },
-              pressed && styles.pressed,
-            ]}
             onPress={() => navigation.navigate('Cart')}
+            style={({ pressed }) => [
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                borderRadius: 8,
+                backgroundColor: theme === 'light' ? '#FFFFFF' : '#007A33', // White in light, DLSU green in dark
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
           >
-            <Text style={[styles.cartButtonText, { color: colors.buttonText }]}>
-              🛒 {getCartItemCount()}
-            </Text>
+            <Feather
+              name="shopping-cart"
+              size={20}
+              color={theme === 'light' ? '#007A33' : '#FFFFFF'} // Green icon in light, white in dark
+            />
+            {getCartItemCount() > 0 && (
+              <View
+                style={{
+                  marginLeft: 4,
+                  backgroundColor: theme === 'light' ? '#007A33' : '#FFFFFF',
+                  borderRadius: 8,
+                  paddingHorizontal: 5,
+                  paddingVertical: 1,
+                  minWidth: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    color: theme === 'light' ? '#FFFFFF' : '#007A33',
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {getCartItemCount()}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </View>
+
       </View>
 
       {/* Product List */}
