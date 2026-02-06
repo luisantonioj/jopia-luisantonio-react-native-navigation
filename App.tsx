@@ -5,9 +5,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CartProvider } from './src/context/CartContext';
 import { ThemeProvider } from './src/context/ThemeContext';
-import HomeScreen from './src/screens/HomeScreen';
-import CartScreen from './src/screens/CartScreen';
-import CheckoutScreen from './src/screens/CheckoutScreen';
+import HomeScreen from './src/screens/home/HomeScreen';
+import CartScreen from './src/screens/cart/CartScreen';
+import CheckoutScreen from './src/screens/checkout/CheckoutScreen';
 
 type RootStackParamList = {
   Home: undefined;

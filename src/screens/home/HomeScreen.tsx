@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCart } from '../context/CartContext';
-import { useTheme } from '../context/ThemeContext';
-import { PRODUCTS } from '../data/products';
-import { ProductCard, SizeSelector } from '../components';
-import { Product, ProductSize, RootStackParamList } from '../types';
+import { useCart } from '../../context/CartContext';
+import { useTheme } from '../../context/ThemeContext';
+import { PRODUCTS } from '../../data/products';
+import { ProductCard, SizeSelector } from '../../components';
+import { Product, ProductSize, RootStackParamList } from '../../types';
 import { Feather } from '@expo/vector-icons';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
